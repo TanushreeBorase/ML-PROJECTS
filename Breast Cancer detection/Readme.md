@@ -10,7 +10,7 @@ About 66% of breast cancer cases are diagnosed at a localized stage, when it's e
 
 When caught early, the 5-year relative survival rate is 99%. 
 
-# How to access this project.
+# How to access this project: 
 Fork the Repository and clone it!
 Model is yours
 
