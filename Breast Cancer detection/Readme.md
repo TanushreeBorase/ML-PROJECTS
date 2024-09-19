@@ -1,4 +1,9 @@
 Breast cancer is the most commonly occurring cancer in women and the second most common cancer overall.
+# Libraries Used
+Numpy
+Pandas
+Matplotlib
+
 # Stats: 
 In the United States
 In 2024, an estimated 310,720 women and 2,800 men will be diagnosed with invasive breast cancer. 
