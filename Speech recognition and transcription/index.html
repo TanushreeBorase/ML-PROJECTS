@@ -1,1 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to Text Converter</title>
+    <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f7fafc;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
 
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        h1 {
+            color: #4a90e2;
+            margin-bottom: 30px;
+            font-size: 2.8em;
+            text-transform: uppercase;
+        }
+
+        button {
+            background-color: #4a90e2;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 15px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #007bff;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #result-text {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            font-size: 16px;
+            resize: none;
+            min-height: 150px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        select, input[type="file"] {
+            padding: 12px;
+            font-size: 16px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 50px;
+            max-width: 250px;
+            background-color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        select:hover, input[type="file"]:hover {
+            background-color: #eef2f7;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .icon {
+            margin-right: 10px;
+        }
+
+        /* Add background gradient */
+        .background-gradient {
+            background: linear-gradient(135deg, #4a90e2 40%, #00bcd4 100%);
+            padding: 50px 0;
+        }
+
+        h2 {
+            margin-top: 30px;
+            font-size: 24px;
+            color: #007bff;
+        }
+
+        .upload-label {
+            background-color: #00bcd4;
+            padding: 10px;
+            border-radius: 50px;
+            display: inline-block;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .upload-label:hover {
+            background-color: #00a4b2;
+        }
+
+        #audio-upload {
+            display: none; /* Hide default input */
+        }
+    </style>
+</head>
+<body>
+    <div class="background-gradient">
+        <div class="container">
+            <h1><i class="fas fa-microphone icon"></i>Speech to Text Converter</h1>
+
+            <div class="buttons-container">
+                <button id="start-btn"><i class="fas fa-play icon"></i>Start Recording</button>
+                <button id="stop-btn" disabled><i class="fas fa-stop icon"></i>Stop Recording</button>
+            </div>
+
+        <!--    <label class="upload-label" for="audio-upload"><i class="fas fa-upload icon"></i>Upload Audio File</label>
+            <input type="file" id="audio-upload" accept="audio/*">  -->
+
+            <label for="language"><i class="fas fa-globe icon"></i>Select Language:</label>
+            <select id="language">
+                <option value="en-US">English (United States)</option>
+                <option value="hi-IN">Hindi (India)</option>
+                <option value="ur-IN">Urdu (India) - اردو</option>
+                <option value="bn-IN">Bengali (India) - বাংলা</option>
+                <option value="gu-IN">Gujarati (India) - ગુજરાતી</option>
+                <option value="mr-IN">Marathi (Maharashtra) - मराठी</option>
+                <option value="pa-IN">Punjabi (India) - ਪੰਜਾਬੀ</option>
+            </select>
+
+            <h2><i class="fas fa-file-alt icon"></i>Transcribed Text:</h2>
+            <textarea id="result-text" rows="10" cols="100" readonly></textarea>
+
+            <div class="buttons-container">
+                <button id="print-btn"><i class="fas fa-print icon"></i>Print</button>
+                <button id="clear-btn"><i class="fas fa-eraser icon"></i>Clear Text</button>
+<!--                <button id="download-btn" visible = false><i class="fas fa-download icon"></i>Download as PDF</button> -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const resultText = document.getElementById('result-text');
+        const languageSelect = document.getElementById('language');
+        const downloadBtn = document.getElementById('download-btn');
+        const printBtn = document.getElementById('print-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const audioUpload = document.getElementById('audio-upload');
+
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
+        startBtn.addEventListener('click', () => {
+            recognition.lang = languageSelect.value;
+            recognition.start();
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+        });
+
+        stopBtn.addEventListener('click', () => {
+            recognition.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+
+        languageSelect.addEventListener('change', () => {
+            recognition.lang = languageSelect.value;
+        });
+
+        recognition.addEventListener('result', (event) => {
+            const transcript = event.results[0][0].transcript;
+            resultText.value += transcript + '\n';
+        });
+
+        recognition.addEventListener('end', () => {
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+
+        recognition.addEventListener('error', (event) => {
+            alert("Error occurred: " + event.error);
+        });
+
+        /*    downloadBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text(resultText.value, 10, 10);
+            doc.save('transcription.pdf');
+        });  */
+
+        printBtn.addEventListener('click', () => {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write('<html><head><title>Print</title></head><body>');
+            printWindow.document.write('<h1>Transcribed Text:</h1>');
+            printWindow.document.write('<pre>' + resultText.value + '</pre>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            resultText.value = '';
+        });
+
+        audioUpload.addEventListener('change', () => {
+            const file = audioUpload.files[0];
+            if (file) {
+                console.log("Audio file uploaded:", file.name);
+            }
+        });
+    </script>
+</body>
+</html>
